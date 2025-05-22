@@ -10,8 +10,6 @@ set(CMAKE_CXX_STANDARD 11)
 # Initialize the Pico SDK
 pico_sdk_init()
 
-# Use this to exclude examples:
-set(PICO_TFLM_BUILD_EXAMPLES OFF CACHE BOOL "Don't build pico-tflmicro examples")
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/pico-tflmicro)
 
 # Add the executable
