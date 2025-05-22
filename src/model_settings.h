@@ -4,7 +4,7 @@
 // Image input size
 constexpr int kNumCols = 32;
 constexpr int kNumRows = 32;
-constexpr int kNumChannels = 1;  // Change to 3 if using RGB model
+constexpr int kNumChannels = 3;  // Changed from 1 to 3 for RGB (MobileNetV1_20)
 
 constexpr int kMaxImageSize = kNumCols * kNumRows * kNumChannels;
 
