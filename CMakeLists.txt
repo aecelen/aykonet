@@ -20,6 +20,8 @@ add_executable(traffic_sign_recognition
     src/detection_responder.cpp
     src/model_settings.cpp
     model/traffic_sign_model_data.cc
+    # Include HM01B0 source directly
+    ../hm01b0-library-for-pico/src/hm01b0.c
 )
 
 # Include paths
@@ -27,13 +29,14 @@ target_include_directories(traffic_sign_recognition PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src
     ${CMAKE_CURRENT_LIST_DIR}/model
     ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/../hm01b0-library-for-pico/src/include
 )
 
-# Compiler flags
+# Compiler flags - separate for C and C++
 target_compile_options(traffic_sign_recognition PRIVATE
-    -fno-rtti
-    -fno-exceptions
-    -fno-threadsafe-statics
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-threadsafe-statics>
     -O3
 )
 
@@ -43,6 +46,10 @@ target_link_libraries(traffic_sign_recognition
     pico-tflmicro
     hardware_gpio
     hardware_pwm
+    hardware_i2c
+    hardware_pio
+    hardware_dma
+    cmsis_core
 )
 
 # Enable USB output, disable UART

@@ -9,17 +9,13 @@
 #include "pico-tflmicro/src/tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "pico-tflmicro/src/tensorflow/lite/schema/schema_generated.h"
 #include "pico/stdlib.h"
-#include "pico/time.h" // For absolute_time functions
+#include "pico/time.h"
 
 // Global variables for tracking performance metrics
 static int64_t total_inference_time = 0;
-static int correct_predictions = 0;
 static int total_predictions = 0;
 
-// Expose image_index from image_provider.cpp
-extern uint32_t image_index;
-
-// Store the last used class ID for comparison with prediction
+// Store the last used class ID (for camera mode, this will be unknown)
 static uint8_t last_class_id = 0;
 
 // Globals used for TensorFlow Lite Micro
@@ -29,29 +25,29 @@ tflite::MicroInterpreter* interpreter = nullptr;
 TfLiteTensor* input = nullptr;
 
 // Memory for model input/output tensors
-constexpr int kTensorArenaSize = 136 * 1024;  // Adjust based on your model's needs
+constexpr int kTensorArenaSize = 136 * 1024;
 alignas(16) static uint8_t tensor_arena[kTensorArenaSize];
 }  // namespace
 
-// The name of this function is important for Arduino compatibility.
 void setup() {
   // Map the model into a usable data structure
   model = tflite::GetModel(g_traffic_sign_model_data);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
-    MicroPrintf("Model version %d not equal to supported version %d.",model->version(), TFLITE_SCHEMA_VERSION);
+    MicroPrintf("Model version %d not equal to supported version %d.",
+                model->version(), TFLITE_SCHEMA_VERSION);
     return;
   }
 
-  // Register the operations we need for AykocNet
-  static tflite::MicroMutableOpResolver<10> micro_op_resolver; // Adjusted number of ops
+  // Register the operations we need for the model
+  static tflite::MicroMutableOpResolver<10> micro_op_resolver;
   micro_op_resolver.AddConv2D();
   micro_op_resolver.AddDepthwiseConv2D();
   micro_op_resolver.AddReshape();
   micro_op_resolver.AddSoftmax();
   micro_op_resolver.AddRelu();
   micro_op_resolver.AddFullyConnected();
-  micro_op_resolver.AddPad(); // For ZeroPadding2D
-  micro_op_resolver.AddMean(); // For GlobalAveragePooling2D
+  micro_op_resolver.AddPad();
+  micro_op_resolver.AddMean();
   micro_op_resolver.AddMul();
   micro_op_resolver.AddAdd();
 
@@ -70,26 +66,23 @@ void setup() {
   // Get information about the model's input
   input = interpreter->input(0);
   
-  // Log the input tensor shape
-  // MicroPrintf("Input tensor dimensions: %d x %d x %d", input->dims->data[1], input->dims->data[2], input->dims->data[3]);
+  MicroPrintf("Model loaded successfully");
+  MicroPrintf("Input tensor dimensions: %d x %d x %d", 
+             input->dims->data[1], input->dims->data[2], input->dims->data[3]);
   
   // Initialize performance metrics
   total_inference_time = 0;
-  correct_predictions = 0;
   total_predictions = 0;
 }
 
-// The name of this function is important for Arduino compatibility.
 void loop() {
-  // Capture or load an image - this will update the image_index and store the class internally
+  // Capture an image from the camera
   if (kTfLiteOk != GetImage(kNumCols, kNumRows, kNumChannels, input->data.int8)) {
     MicroPrintf("Image capture failed.");
     return;
   }
   
-  // Get the true class ID from the image provider
-  // This works because when GetImage is called, it internally stores the class ID we need
-  uint8_t true_class = last_class_id;
+  MicroPrintf("Running inference...");
 
   // Start timing
   absolute_time_t start_time = get_absolute_time();
@@ -121,31 +114,33 @@ void loop() {
     }
   }
   
-  // Check if the prediction is correct
-  if (max_index == true_class) {
-    correct_predictions++;
-    MicroPrintf("CORRECT\n");
-  } else {
-    MicroPrintf("WRONG: Expected class %d but got %d.\n", 
-                true_class, max_index);
-  }
+  // Convert score to confidence percentage
+  float confidence = (max_score + 128) / 255.0f * 100.0f;
+  
+  MicroPrintf("Predicted: Class %d (%s) with %.1f%% confidence", 
+             max_index, 
+             kCategoryLabels[max_index], 
+             confidence);
 
   // Process the results
   RespondToDetection(max_index, max_score);
+  
+  // Add a delay between captures
+  sleep_ms(2000);  // 2 second delay between captures
 }
 
-// Implementation of performance metrics function
+// Performance metrics function (modified for camera mode)
 void GetPerformanceMetrics(int64_t* avg_time_us, float* accuracy) {
   if (total_predictions > 0) {
     *avg_time_us = total_inference_time / total_predictions;
-    *accuracy = (float)correct_predictions / total_predictions * 100.0f;
+    *accuracy = 0.0f;  // Can't calculate accuracy without ground truth
   } else {
     *avg_time_us = 0;
     *accuracy = 0.0f;
   }
 }
 
-// Add this function to get class ID for accuracy calculation
+// Set class ID function (kept for compatibility)
 void SetLastClassId(uint8_t class_id) {
   last_class_id = class_id;
 }
