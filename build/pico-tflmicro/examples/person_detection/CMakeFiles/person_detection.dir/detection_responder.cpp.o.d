@@ -1,0 +1,33 @@
+pico-tflmicro/examples/person_detection/CMakeFiles/person_detection.dir/detection_responder.cpp.o: \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/examples/person_detection/detection_responder.cpp \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/examples/person_detection/detection_responder.h \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/lite/c/common.h \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/lite/core/c/common.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/stdarg.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/stdbool.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/stddef.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/stdint.h \
+ /usr/arm-none-eabi/include/stdint.h \
+ /usr/arm-none-eabi/include/machine/_default_types.h \
+ /usr/arm-none-eabi/include/sys/features.h \
+ /usr/arm-none-eabi/include/_newlib_version.h \
+ /usr/arm-none-eabi/include/sys/_intsup.h \
+ /usr/arm-none-eabi/include/sys/_stdint.h \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/lite/core/c/c_api_types.h \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/compiler/mlir/lite/core/c/tflite_types.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/utility \
+ /usr/arm-none-eabi/include/c++/14.2.0/arm-none-eabi/thumb/v6-m/nofp/bits/c++config.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/arm-none-eabi/thumb/v6-m/nofp/bits/os_defines.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/arm-none-eabi/thumb/v6-m/nofp/bits/cpu_defines.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/bits/stl_relops.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/bits/stl_pair.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/type_traits \
+ /usr/arm-none-eabi/include/c++/14.2.0/bits/version.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/bits/move.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/bits/utility.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/initializer_list \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/lite/micro/tflite_bridge/micro_error_reporter.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/cstdarg \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/lite/core/api/error_reporter.h \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/compiler/mlir/lite/core/api/error_reporter.h \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/lite/micro/compatibility.h

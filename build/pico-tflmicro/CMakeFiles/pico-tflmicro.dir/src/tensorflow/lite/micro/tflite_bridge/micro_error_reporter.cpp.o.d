@@ -1,0 +1,26 @@
+pico-tflmicro/CMakeFiles/pico-tflmicro.dir/src/tensorflow/lite/micro/tflite_bridge/micro_error_reporter.cpp.o: \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/lite/micro/tflite_bridge/micro_error_reporter.cpp \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/lite/micro/tflite_bridge/micro_error_reporter.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/cstdarg \
+ /usr/arm-none-eabi/include/c++/14.2.0/arm-none-eabi/thumb/v6-m/nofp/bits/c++config.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/arm-none-eabi/thumb/v6-m/nofp/bits/os_defines.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/arm-none-eabi/thumb/v6-m/nofp/bits/cpu_defines.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/pstl/pstl_config.h \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/stdarg.h \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/lite/core/api/error_reporter.h \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/compiler/mlir/lite/core/api/error_reporter.h \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/lite/micro/compatibility.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/cstdint \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/stdint.h \
+ /usr/arm-none-eabi/include/stdint.h \
+ /usr/arm-none-eabi/include/machine/_default_types.h \
+ /usr/arm-none-eabi/include/sys/features.h \
+ /usr/arm-none-eabi/include/_newlib_version.h \
+ /usr/arm-none-eabi/include/sys/_intsup.h \
+ /usr/arm-none-eabi/include/sys/_stdint.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/new \
+ /usr/arm-none-eabi/include/c++/14.2.0/bits/exception.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/bits/version.h \
+ /home/weddingc4ke/TinyML/aykonet/pico-tflmicro/src/tensorflow/lite/micro/micro_log.h \
+ /usr/arm-none-eabi/include/c++/14.2.0/cstddef \
+ /usr/lib/gcc/arm-none-eabi/14.2.0/include/stddef.h
