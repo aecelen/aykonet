@@ -42,16 +42,17 @@ void setup() {
     return;
   }
 
-  // Register the operations we need for AykocNet
-  static tflite::MicroMutableOpResolver<10> micro_op_resolver; // Adjusted number of ops
-  micro_op_resolver.AddConv2D();
-  micro_op_resolver.AddDepthwiseConv2D();
-  micro_op_resolver.AddReshape();
-  micro_op_resolver.AddSoftmax();
-  micro_op_resolver.AddRelu();
-  micro_op_resolver.AddFullyConnected();
-  micro_op_resolver.AddPad(); // For ZeroPadding2D
-  micro_op_resolver.AddMean(); // For GlobalAveragePooling2D
+  // Required TensorFlow Lite Micro operations for GiordyNet model
+  static tflite::MicroMutableOpResolver<8> micro_op_resolver; // Increased to 6 operations
+
+  // Core operations needed for GiordyNet architecture:
+  micro_op_resolver.AddConv2D();           // For Conv2D layers (3 layers)
+  micro_op_resolver.AddMaxPool2D();        // For MaxPooling2D layers (3 layers)  
+  micro_op_resolver.AddRelu();             // For ReLU activation layers (4 layers)
+  micro_op_resolver.AddReshape();          // For Flatten layer (converts to Reshape in TFLite)
+  micro_op_resolver.AddFullyConnected();   // For Dense layers (2 layers)
+  micro_op_resolver.AddSoftmax();          // For final softmax activation
+  
   micro_op_resolver.AddMul();
   micro_op_resolver.AddAdd();
 
