@@ -28,9 +28,9 @@ TfLiteStatus GetImage(int image_width, int image_height, int channels, int8_t* i
   const int8_t* current_image = get_test_image_by_class(class_id);
   
   // Report which image/class we're using
-  MicroPrintf("Class %d - %s",  
-              class_id, 
-              kCategoryLabels[class_id]);
+  // MicroPrintf("Class %d - %s",  
+  //             class_id, 
+  //             kCategoryLabels[class_id]);
   
   // Make sure we have a valid image
   if (current_image == NULL) {

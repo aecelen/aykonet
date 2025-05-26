@@ -124,7 +124,7 @@ void loop() {
   // Check if the prediction is correct
   if (max_index == true_class) {
     correct_predictions++;
-    MicroPrintf("CORRECT\n");
+    // MicroPrintf("CORRECT\n");
   } else {
     MicroPrintf("WRONG: Expected class %d but got %d.\n", 
                 true_class, max_index);
