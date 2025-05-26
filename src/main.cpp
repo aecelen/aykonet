@@ -7,7 +7,11 @@
 
 int main(int argc, char* argv[]) {
     stdio_init_all();
-    sleep_ms(4000);
+    sleep_ms(2000);
+
+    while (!stdio_usb_connected()) {
+        tight_loop_contents();
+    }
 
     // Debug
     const uint LED_PIN = PICO_DEFAULT_LED_PIN;
@@ -21,7 +25,7 @@ int main(int argc, char* argv[]) {
         sleep_ms(100);
     }
 
-    sleep_ms(2000); 
+    sleep_ms(1000); 
     
     printf("AykoNet is running...\n\n");
     
