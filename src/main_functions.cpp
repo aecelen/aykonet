@@ -42,18 +42,17 @@ void setup() {
     return;
   }
 
-  // Register the operations we need for AykocNet
   static tflite::MicroMutableOpResolver<10> micro_op_resolver; // Adjusted number of ops
+  // micro_op_resolver.AddAveragePool2D();
   micro_op_resolver.AddConv2D();
   micro_op_resolver.AddDepthwiseConv2D();
   micro_op_resolver.AddReshape();
   micro_op_resolver.AddSoftmax();
-  micro_op_resolver.AddRelu();
-  micro_op_resolver.AddFullyConnected();
-  micro_op_resolver.AddPad(); // For ZeroPadding2D
-  micro_op_resolver.AddMean(); // For GlobalAveragePooling2D
+  micro_op_resolver.AddMaxPool2D();
   micro_op_resolver.AddMul();
   micro_op_resolver.AddAdd();
+  micro_op_resolver.AddPad();
+  micro_op_resolver.AddFullyConnected();
 
   // Build an interpreter to run the model
   static tflite::MicroInterpreter static_interpreter(
