@@ -19,6 +19,7 @@ add_executable(traffic_sign_recognition
     src/image_provider.cpp
     src/detection_responder.cpp
     src/model_settings.cpp
+    src/hm01b0.c
     model/traffic_sign_model_data.cc
 )
 
@@ -27,6 +28,11 @@ target_include_directories(traffic_sign_recognition PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src
     ${CMAKE_CURRENT_LIST_DIR}/model
     ${CMAKE_CURRENT_LIST_DIR}
+)
+
+# Set C compiler flags
+set(C_FLAGS
+    -O3
 )
 
 # Compiler flags
@@ -43,6 +49,10 @@ target_link_libraries(traffic_sign_recognition
     pico-tflmicro
     hardware_gpio
     hardware_pwm
+    hardware_i2c    # For camera I2C
+    hardware_pio    # For camera PIO
+    hardware_dma    # For camera DMA
+    cmsis_core      # For camera driver
 )
 
 # Enable USB output, disable UART

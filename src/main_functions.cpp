@@ -9,18 +9,10 @@
 #include "pico-tflmicro/src/tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "pico-tflmicro/src/tensorflow/lite/schema/schema_generated.h"
 #include "pico/stdlib.h"
-#include "pico/time.h" // For absolute_time functions
+#include "pico/time.h"
 
-// Global variables for tracking performance metrics
-static int64_t total_inference_time = 0;
-static int correct_predictions = 0;
-static int total_predictions = 0;
-
-// Expose image_index from image_provider.cpp
-extern uint32_t image_index;
-
-// Store the last used class ID for comparison with prediction
-static uint8_t last_class_id = 0;
+// Store the last used class ID (not used in camera mode)
+static uint8_t last_class_id = 255;
 
 // Globals used for TensorFlow Lite Micro
 namespace {
@@ -38,12 +30,13 @@ void setup() {
   // Map the model into a usable data structure
   model = tflite::GetModel(g_traffic_sign_model_data);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
-    MicroPrintf("Model version %d not equal to supported version %d.",model->version(), TFLITE_SCHEMA_VERSION);
+    MicroPrintf("Model version %d not equal to supported version %d.",
+                model->version(), TFLITE_SCHEMA_VERSION);
     return;
   }
 
-  // Register the operations we need for AykocNet
-  static tflite::MicroMutableOpResolver<10> micro_op_resolver; // Adjusted number of ops
+  // Register the operations we need for AykoNet
+  static tflite::MicroMutableOpResolver<10> micro_op_resolver;
   micro_op_resolver.AddConv2D();
   micro_op_resolver.AddDepthwiseConv2D();
   micro_op_resolver.AddReshape();
@@ -70,43 +63,27 @@ void setup() {
   // Get information about the model's input
   input = interpreter->input(0);
   
-  // Log the input tensor shape
-  // MicroPrintf("Input tensor dimensions: %d x %d x %d", input->dims->data[1], input->dims->data[2], input->dims->data[3]);
-  
-  // Initialize performance metrics
-  total_inference_time = 0;
-  correct_predictions = 0;
-  total_predictions = 0;
+  MicroPrintf("Model loaded successfully!");
+  MicroPrintf("Input tensor shape: %d x %d x %d", 
+              input->dims->data[1], 
+              input->dims->data[2], 
+              input->dims->data[3]);
+  MicroPrintf("Waiting for camera input...\n");
 }
 
 // The name of this function is important for Arduino compatibility.
 void loop() {
-  // Capture or load an image - this will update the image_index and store the class internally
+  // Capture image from camera
   if (kTfLiteOk != GetImage(kNumCols, kNumRows, kNumChannels, input->data.int8)) {
     MicroPrintf("Image capture failed.");
     return;
   }
-  
-  // Get the true class ID from the image provider
-  // This works because when GetImage is called, it internally stores the class ID we need
-  uint8_t true_class = last_class_id;
 
-  // Start timing
-  absolute_time_t start_time = get_absolute_time();
-  
   // Run the model on this input
   if (kTfLiteOk != interpreter->Invoke()) {
     MicroPrintf("Invoke failed.");
     return;
   }
-  
-  // End timing
-  absolute_time_t end_time = get_absolute_time();
-  int64_t inference_time_us = absolute_time_diff_us(start_time, end_time);
-  
-  // Accumulate inference time
-  total_inference_time += inference_time_us;
-  total_predictions++;
 
   // Get the output tensor
   TfLiteTensor* output = interpreter->output(0);
@@ -114,38 +91,39 @@ void loop() {
   // Find the class with highest score
   int8_t max_score = -128;
   int max_index = -1;
+  
+  // Also find second highest for confidence assessment
+  int8_t second_max_score = -128;
+  
   for (int i = 0; i < kCategoryCount; i++) {
     if (output->data.int8[i] > max_score) {
+      second_max_score = max_score;
       max_score = output->data.int8[i];
       max_index = i;
+    } else if (output->data.int8[i] > second_max_score) {
+      second_max_score = output->data.int8[i];
     }
   }
   
-  // Check if the prediction is correct
-  if (max_index == true_class) {
-    correct_predictions++;
-    // MicroPrintf("CORRECT\n");
+  // Calculate confidence gap (how much better is top prediction)
+  int confidence_gap = max_score - second_max_score;
+  
+  // Only report if we have reasonable confidence
+  // Adjust threshold based on your needs
+  if (max_score > -100 && confidence_gap > 10) {
+    RespondToDetection(max_index, max_score);
   } else {
-    MicroPrintf("WRONG: Expected class %d but got %d.\n", 
-                true_class, max_index);
+    // Low confidence - unclear detection
+    RespondToDetection(-1, max_score);
   }
-
-  // Process the results
-  RespondToDetection(max_index, max_score);
 }
 
-// Implementation of performance metrics function
+// These functions are not used in camera mode but kept for compatibility
 void GetPerformanceMetrics(int64_t* avg_time_us, float* accuracy) {
-  if (total_predictions > 0) {
-    *avg_time_us = total_inference_time / total_predictions;
-    *accuracy = (float)correct_predictions / total_predictions * 100.0f;
-  } else {
-    *avg_time_us = 0;
-    *accuracy = 0.0f;
-  }
+  *avg_time_us = 0;
+  *accuracy = 0.0f;
 }
 
-// Add this function to get class ID for accuracy calculation
 void SetLastClassId(uint8_t class_id) {
   last_class_id = class_id;
 }
