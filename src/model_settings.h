@@ -2,8 +2,8 @@
 #define TRAFFIC_SIGN_MODEL_SETTINGS_H_
 
 // Image input size
-constexpr int kNumCols = 32;
-constexpr int kNumRows = 32;
+constexpr int kNumCols = 64;
+constexpr int kNumRows = 64;
 constexpr int kNumChannels = 1;  // Change to 3 if using RGB model
 
 constexpr int kMaxImageSize = kNumCols * kNumRows * kNumChannels;

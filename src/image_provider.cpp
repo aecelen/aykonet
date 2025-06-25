@@ -86,37 +86,73 @@ static bool camera_initialized = false;
 //     }
 // }
 
-void resize_image(const uint8_t* src, int src_width, int src_height,
-                            uint8_t* dst, int dst_width, int dst_height) {
-    // Average pixels in each block (best for downsampling)
-    // For 160x120 -> 32x32: each output pixel averages a 5x3.75 block
+// void resize_image(const uint8_t* src, int src_width, int src_height,
+//                             uint8_t* dst, int dst_width, int dst_height) {
+//     // Average pixels in each block (best for downsampling)
+//     // For 160x120 -> 32x32: each output pixel averages a 5x3.75 block
 
-    float x_ratio = (float)src_width / dst_width;   // 5.0
-    float y_ratio = (float)src_height / dst_height; // 3.75
+//     float x_ratio = (float)src_width / dst_width;   // 5.0
+//     float y_ratio = (float)src_height / dst_height; // 3.75
+
+//     for (int y = 0; y < dst_height; y++) {
+//         for (int x = 0; x < dst_width; x++) {
+//         // Calculate source block boundaries
+//         int x_start = (int)(x * x_ratio);
+//         int x_end = (int)((x + 1) * x_ratio);
+//         int y_start = (int)(y * y_ratio);
+//         int y_end = (int)((y + 1) * y_ratio);
+
+//         // Clamp to image boundaries
+//         if (x_end > src_width) x_end = src_width;
+//         if (y_end > src_height) y_end = src_height;
+
+//         // Average all pixels in the block
+//         int sum = 0;
+//         int count = 0;
+//         for (int sy = y_start; sy < y_end; sy++) {
+//             for (int sx = x_start; sx < x_end; sx++) {
+//                 sum += src[sy * src_width + sx];
+//                 count++;
+//             }
+//         }
+
+//         dst[y * dst_width + x] = (count > 0) ? (sum / count) : 0;
+//         }
+//     }
+// }
+
+// Area averaging resize optimized for 160x120 -> 64x64
+void resize_image(const uint8_t* src, int src_width, int src_height, 
+                    uint8_t* dst, int dst_width, int dst_height) {
+    // For 160x120 -> 64x64: each output pixel averages a 2.5x1.875 block
+    // This gives better quality than simple decimation for 64x64
+
+    float x_ratio = (float)src_width / dst_width;   // 160/64 = 2.5
+    float y_ratio = (float)src_height / dst_height; // 120/64 = 1.875
 
     for (int y = 0; y < dst_height; y++) {
         for (int x = 0; x < dst_width; x++) {
-        // Calculate source block boundaries
-        int x_start = (int)(x * x_ratio);
-        int x_end = (int)((x + 1) * x_ratio);
-        int y_start = (int)(y * y_ratio);
-        int y_end = (int)((y + 1) * y_ratio);
+            // Calculate source block boundaries
+            int x_start = (int)(x * x_ratio);
+            int x_end = (int)((x + 1) * x_ratio);
+            int y_start = (int)(y * y_ratio);
+            int y_end = (int)((y + 1) * y_ratio);
 
-        // Clamp to image boundaries
-        if (x_end > src_width) x_end = src_width;
-        if (y_end > src_height) y_end = src_height;
+            // Clamp to image boundaries
+            if (x_end > src_width) x_end = src_width;
+            if (y_end > src_height) y_end = src_height;
 
-        // Average all pixels in the block
-        int sum = 0;
-        int count = 0;
-        for (int sy = y_start; sy < y_end; sy++) {
-            for (int sx = x_start; sx < x_end; sx++) {
-                sum += src[sy * src_width + sx];
-                count++;
+            // Average all pixels in the block
+            int sum = 0;
+            int count = 0;
+            for (int sy = y_start; sy < y_end; sy++) {
+                for (int sx = x_start; sx < x_end; sx++) {
+                    sum += src[sy * src_width + sx];
+                    count++;
+                }
             }
-        }
 
-        dst[y * dst_width + x] = (count > 0) ? (sum / count) : 0;
+            dst[y * dst_width + x] = (count > 0) ? (sum / count) : 0;
         }
     }
 }

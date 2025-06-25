@@ -22,7 +22,7 @@ tflite::MicroInterpreter* interpreter = nullptr;
 TfLiteTensor* input = nullptr;
 
 // Memory for model input/output tensors
-constexpr int kTensorArenaSize = 136 * 1024;  // Adjust based on your model's needs
+constexpr int kTensorArenaSize = 150 * 1024;  // Adjust based on your model's needs
 alignas(16) static uint8_t tensor_arena[kTensorArenaSize];
 }  // namespace
 
@@ -110,42 +110,18 @@ void loop() {
   // Get the output tensor
   TfLiteTensor* output = interpreter->output(0);
 
-  // // Find the class with highest score
-  // int8_t max_score = -128;
-  // int max_index = -1;
-  // for (int i = 0; i < kCategoryCount; i++) {
-  //   if (output->data.int8[i] > max_score) {
-  //     max_score = output->data.int8[i];
-  //     max_index = i;
-  //   }
-  // }
-  
-  // // Process the results
-  // RespondToDetection(max_index, max_score);
+  // Find the class with highest score
   int8_t max_score = -128;
-  int8_t second_max_score = -128;
   int max_index = -1;
-  int second_max_index = -1;
-
   for (int i = 0; i < kCategoryCount; i++) {
     if (output->data.int8[i] > max_score) {
-      second_max_score = max_score;
-      second_max_index = max_index;
       max_score = output->data.int8[i];
       max_index = i;
-    } else if (output->data.int8[i] > second_max_score) {
-      second_max_score = output->data.int8[i];
-      second_max_index = i;
     }
   }
-
-  // Use second best if top is Yield
-  if (max_index == 13 && second_max_index >= 0) {
-    MicroPrintf("Skipping Yield -> Using %s", kCategoryLabels[second_max_index]);
-    RespondToDetection(second_max_index, second_max_score);
-  } else {
-    RespondToDetection(max_index, max_score);
-  }
+  
+  // Process the results
+  RespondToDetection(max_index, max_score);
   
   // Add a small delay to prevent overwhelming the system
   sleep_ms(500);
