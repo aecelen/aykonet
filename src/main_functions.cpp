@@ -13,14 +13,7 @@
 
 // Global variables for tracking performance metrics
 static int64_t total_inference_time = 0;
-static int correct_predictions = 0;
-static int total_predictions = 0;
-
-// Expose image_index from image_provider.cpp
-extern uint32_t image_index;
-
-// Store the last used class ID for comparison with prediction
-static uint8_t last_class_id = 0;
+static int total_inferences = 0;
 
 // Globals used for TensorFlow Lite Micro
 namespace {
@@ -35,15 +28,18 @@ alignas(16) static uint8_t tensor_arena[kTensorArenaSize];
 
 // The name of this function is important for Arduino compatibility.
 void setup() {
+  MicroPrintf("Setting up TensorFlow Lite Micro...");
+  
   // Map the model into a usable data structure
   model = tflite::GetModel(g_traffic_sign_model_data);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
-    MicroPrintf("Model version %d not equal to supported version %d.",model->version(), TFLITE_SCHEMA_VERSION);
+    MicroPrintf("Model version %d not equal to supported version %d.",
+                model->version(), TFLITE_SCHEMA_VERSION);
     return;
   }
 
-  // Register the operations we need for AykocNet
-  static tflite::MicroMutableOpResolver<10> micro_op_resolver; // Adjusted number of ops
+  // Register the operations we need for AykoNet
+  static tflite::MicroMutableOpResolver<10> micro_op_resolver;
   micro_op_resolver.AddConv2D();
   micro_op_resolver.AddDepthwiseConv2D();
   micro_op_resolver.AddReshape();
@@ -70,26 +66,29 @@ void setup() {
   // Get information about the model's input
   input = interpreter->input(0);
   
-  // Log the input tensor shape
-  // MicroPrintf("Input tensor dimensions: %d x %d x %d", input->dims->data[1], input->dims->data[2], input->dims->data[3]);
+  MicroPrintf("Input tensor dimensions: %d x %d x %d", 
+              input->dims->data[1], input->dims->data[2], input->dims->data[3]);
+  
+  // Initialize camera
+  if (InitCamera() != kTfLiteOk) {
+    MicroPrintf("Camera initialization failed!");
+    return;
+  }
   
   // Initialize performance metrics
   total_inference_time = 0;
-  correct_predictions = 0;
-  total_predictions = 0;
+  total_inferences = 0;
+  
+  MicroPrintf("Setup completed successfully");
 }
 
 // The name of this function is important for Arduino compatibility.
 void loop() {
-  // Capture or load an image - this will update the image_index and store the class internally
+  // Capture image from camera
   if (kTfLiteOk != GetImage(kNumCols, kNumRows, kNumChannels, input->data.int8)) {
     MicroPrintf("Image capture failed.");
     return;
   }
-  
-  // Get the true class ID from the image provider
-  // This works because when GetImage is called, it internally stores the class ID we need
-  uint8_t true_class = last_class_id;
 
   // Start timing
   absolute_time_t start_time = get_absolute_time();
@@ -106,7 +105,7 @@ void loop() {
   
   // Accumulate inference time
   total_inference_time += inference_time_us;
-  total_predictions++;
+  total_inferences++;
 
   // Get the output tensor
   TfLiteTensor* output = interpreter->output(0);
@@ -121,31 +120,20 @@ void loop() {
     }
   }
   
-  // Check if the prediction is correct
-  if (max_index == true_class) {
-    correct_predictions++;
-    // MicroPrintf("CORRECT\n");
-  } else {
-    MicroPrintf("WRONG: Expected class %d but got %d.\n", 
-                true_class, max_index);
-  }
-
   // Process the results
   RespondToDetection(max_index, max_score);
+  
+  // Add a small delay to prevent overwhelming the system
+  sleep_ms(500);
 }
 
 // Implementation of performance metrics function
-void GetPerformanceMetrics(int64_t* avg_time_us, float* accuracy) {
-  if (total_predictions > 0) {
-    *avg_time_us = total_inference_time / total_predictions;
-    *accuracy = (float)correct_predictions / total_predictions * 100.0f;
+void GetPerformanceMetrics(int64_t* avg_time_us, int* total_inferences_count) {
+  if (total_inferences > 0) {
+    *avg_time_us = total_inference_time / total_inferences;
+    *total_inferences_count = total_inferences;
   } else {
     *avg_time_us = 0;
-    *accuracy = 0.0f;
+    *total_inferences_count = 0;
   }
-}
-
-// Add this function to get class ID for accuracy calculation
-void SetLastClassId(uint8_t class_id) {
-  last_class_id = class_id;
 }

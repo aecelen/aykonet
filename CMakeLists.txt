@@ -19,6 +19,7 @@ add_executable(traffic_sign_recognition
     src/image_provider.cpp
     src/detection_responder.cpp
     src/model_settings.cpp
+    src/hm01b0.c
     model/traffic_sign_model_data.cc
 )
 
@@ -43,6 +44,10 @@ target_link_libraries(traffic_sign_recognition
     pico-tflmicro
     hardware_gpio
     hardware_pwm
+    cmsis_core
+    hardware_dma
+    hardware_i2c
+    hardware_pio
 )
 
 # Enable USB output, disable UART

@@ -18,10 +18,7 @@ void setup();
 void loop();
 
 // Get performance metrics after all iterations
-void GetPerformanceMetrics(int64_t* avg_time_us, float* accuracy);
-
-// Set the last class ID for accuracy tracking
-void SetLastClassId(uint8_t class_id);
+void GetPerformanceMetrics(int64_t* avg_time_us, int* total_inferences);
 
 #ifdef __cplusplus
 }

@@ -2,8 +2,6 @@
 #include "pico/stdlib.h"
 #include "pico/time.h"
 #include <cstdio>
-#include <cstdarg>
-#include <cstdio>
 
 int main(int argc, char* argv[]) {
     stdio_init_all();
@@ -13,11 +11,12 @@ int main(int argc, char* argv[]) {
         tight_loop_contents();
     }
 
-    // Debug
+    // Debug LED initialization
     const uint LED_PIN = PICO_DEFAULT_LED_PIN;
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
     
+    // LED blink to indicate startup
     for (int i = 0; i < 5; i++) {
         gpio_put(LED_PIN, 1);
         sleep_ms(100);
@@ -27,34 +26,37 @@ int main(int argc, char* argv[]) {
 
     sleep_ms(1000); 
     
-    printf("AykoNet is running...\n\n");
+    printf("AykoNet Traffic Sign Recognition with Camera\n");
+    printf("Initializing...\n\n");
     
     setup();
-
-    // Run for exactly 43 iterations (one for each traffic sign class)
-    int iterations = 0;
-    const int MAX_ITERATIONS = 43;
     
+    printf("Starting continuous inference...\n");
+    printf("Press Ctrl+C to view performance metrics\n\n");
+    
+    int inference_count = 0;
+    const int REPORT_INTERVAL = 50; // Report every 50 inferences
     
     while (true) {
         loop();
-
-        iterations++;
-        if (iterations >= MAX_ITERATIONS) {
         
-            // Get performance metrics
+        inference_count++;
+        
+        // Periodically report performance
+        if (inference_count % REPORT_INTERVAL == 0) {
             int64_t avg_inference_time_us;
-            float accuracy;
-            GetPerformanceMetrics(&avg_inference_time_us, &accuracy);
+            int total_inferences;
+            GetPerformanceMetrics(&avg_inference_time_us, &total_inferences);
             
-            printf("\n========== PERFORMANCE REPORT ==========\n");
-            printf("Inference time: %.2f ms \n", avg_inference_time_us / 1000.0f);
-            printf("Accuracy: %.2f%%\n", accuracy);
+            printf("========== PERFORMANCE UPDATE ==========\n");
+            printf("Total inferences: %d\n", total_inferences);
+            printf("Average inference time: %.2f ms\n", avg_inference_time_us / 1000.0f);
+            printf("Inference rate: %.1f FPS\n", 1000000.0f / avg_inference_time_us);
             printf("========================================\n\n");
-            
-            sleep_ms(30000);
-            iterations = 0;
         }
+        
+        // Small delay to prevent overwhelming the system
+        sleep_ms(50);
     }
     
     return 0;

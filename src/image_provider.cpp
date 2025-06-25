@@ -1,50 +1,129 @@
 #include "image_provider.h"
 #include "model_settings.h"
-#include "test_images.h"
+#include "hm01b0.h"
 #include "pico/stdlib.h"
-#include "main_functions.h" // Include to access SetLastClassId function
+#include "pico-tflmicro/src/tensorflow/lite/micro/micro_log.h"
+#include <cmath>  // For roundf function
 
-// Make image_index accessible to other files
-uint32_t image_index = 0;
+// Camera configuration - Choose based on your hardware setup
+static const struct hm01b0_config camera_config = {
+    .i2c           = i2c0,        // Use i2c0 instance
+    .sda_pin       = 4,           // GPIO 4 for I2C SDA
+    .scl_pin       = 5,           // GPIO 5 for I2C SCL
+
+    // Pin configuration - ADJUST THESE TO MATCH YOUR WIRING
+    .vsync_pin     = 6,           // GPIO 6 for VSYNC
+    .hsync_pin     = 7,           // GPIO 7 for HSYNC  
+    .pclk_pin      = 8,           // GPIO 8 for pixel clock
+    .data_pin_base = 9,           // GPIO 9 for data (only 1 bit used)
+    .data_bits     = 1,           // Use 1-bit data mode (grayscale)
+    .pio           = pio0,        // Use PIO 0
+    .pio_sm        = 0,           // Use state machine 0
+    .reset_pin     = -1,          // No reset pin (-1 = not connected)
+    .mclk_pin      = -1,          // No master clock pin (-1 = not connected)
+
+    // Use smallest available resolution to minimize processing
+    .width         = 160,         // Minimum width supported
+    .height        = 120,         // Minimum height supported
+};
+
+// Camera frame buffer
+static uint8_t camera_buffer[160 * 120];
+static bool camera_initialized = false;
+
+// Simple nearest neighbor resize (faster than bilinear)
+void resize_image(const uint8_t* src, int src_width, int src_height, 
+                  uint8_t* dst, int dst_width, int dst_height) {
+    // For 160x120 to 32x32: every 5x3.75 pixels becomes 1 pixel
+    // We'll sample every 5th pixel in x and every 3.75th pixel in y
+    float x_ratio = (float)src_width / dst_width;   // 160/32 = 5.0
+    float y_ratio = (float)src_height / dst_height; // 120/32 = 3.75
+    
+    for (int y = 0; y < dst_height; y++) {
+        for (int x = 0; x < dst_width; x++) {
+            int src_x = (int)(x * x_ratio);
+            int src_y = (int)(y * y_ratio);
+            dst[y * dst_width + x] = src[src_y * src_width + src_x];
+        }
+    }
+}
+
+// Quantize image using EXACT same parameters as your test images
+void quantize_image(const uint8_t* src, int8_t* dst, int size) {
+    // Your test image quantization parameters:
+    // scale = 0.003921568859368563 (which is 1/255)
+    // zero_point = -128
+    // Formula: quantized = (normalized / scale) + zero_point
+    
+    const float scale = 0.003921568859368563f;  // Exact same as your test images
+    const int zero_point = -128;                // Exact same as your test images
+    
+    for (int i = 0; i < size; i++) {
+        // Step 1: Normalize camera pixel [0,255] to [0,1] (same as your training)
+        float normalized = src[i] / 255.0f;
+        
+        // Step 2: Apply same quantization as your test images
+        float quantized_float = (normalized / scale) + zero_point;
+        
+        // Step 3: Clamp to int8 range and convert
+        int quantized_int = (int)roundf(quantized_float);
+        if (quantized_int < -128) quantized_int = -128;
+        if (quantized_int > 127) quantized_int = 127;
+        
+        dst[i] = (int8_t)quantized_int;
+    }
+    
+    // Note: Since scale = 1/255, this simplifies to: dst[i] = src[i] - 128
+    // But using the exact formula ensures perfect matching with your test images
+}
+
+TfLiteStatus InitCamera() {
+    if (camera_initialized) {
+        return kTfLiteOk;
+    }
+    
+    MicroPrintf("Initializing camera...");
+    
+    if (hm01b0_init(&camera_config) != 0) {
+        MicroPrintf("Failed to initialize camera!");
+        return kTfLiteError;
+    }
+    
+    // Set exposure (integration time) - IMPORTANT for image quality
+    // Range: 2 to 65535 lines
+    // Lower values = darker images, less motion blur
+    // Higher values = brighter images, more motion blur
+    // For traffic signs (usually bright/reflective), moderate exposure works well
+    hm01b0_set_coarse_integration(100);  // Start with moderate exposure - 300
+    
+    camera_initialized = true;
+    MicroPrintf("Camera initialized with exposure = 100");
+    
+    return kTfLiteOk;
+}
 
 TfLiteStatus GetImage(int image_width, int image_height, int channels, int8_t* image_data) {
-  
-  // For now, we'll use the test images from test_images.h
-  // In a real application, you would capture images from a camera
-  
-  // Instead of manually listing test images, we'll use the get_test_image_by_class
-  // function that's generated in test_images.h
-  
-  // Get the current test image index (cycle through 0-42)
-  uint8_t current_class = image_index % NUM_TEST_IMAGES;
-  
-  // Get the class ID for the current test image
-  uint8_t class_id = test_image_classes[current_class];
-  
-  // Store the class ID for accuracy calculation
-  SetLastClassId(class_id);
-  
-  // Get the corresponding test image data
-  const int8_t* current_image = get_test_image_by_class(class_id);
-  
-  // Report which image/class we're using
-  // MicroPrintf("Class %d - %s",  
-  //             class_id, 
-  //             kCategoryLabels[class_id]);
-  
-  // Make sure we have a valid image
-  if (current_image == NULL) {
-    MicroPrintf("ERROR: Test image for class %d not found!", class_id);
-    return kTfLiteError;
-  }
-  
-  // Copy the test image data into the input tensor
-  for (int i = 0; i < image_width * image_height * channels; ++i) {
-    image_data[i] = current_image[i];
-  }
-  
-  // Move to the next test image for the next inference
-  image_index++;
-  
-  return kTfLiteOk;
+    // Make sure camera is initialized
+    if (!camera_initialized) {
+        if (InitCamera() != kTfLiteOk) {
+            return kTfLiteError;
+        }
+    }
+    
+    // Capture frame from camera
+    hm01b0_read_frame(camera_buffer, sizeof(camera_buffer));
+    
+    // Create temporary buffer for resized image
+    uint8_t resized_buffer[kNumCols * kNumRows];
+    
+    // Resize from 160x120 to 32x32
+    resize_image(camera_buffer, 160, 120, 
+                 resized_buffer, kNumCols, kNumRows);
+    
+    // Quantize for model input
+    quantize_image(resized_buffer, image_data, kNumCols * kNumRows * channels);
+    
+    // MicroPrintf("Image captured and preprocessed");
+    
+    return kTfLiteOk;
 }
