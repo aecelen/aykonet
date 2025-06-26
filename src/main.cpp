@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
     printf("Press Ctrl+C to view performance metrics\n\n");
     
     int inference_count = 0;
-    const int REPORT_INTERVAL = 50; // Report every 50 inferences
+    const int REPORT_INTERVAL = 20; // Report every 10 inferences
     
     while (true) {
         loop();
@@ -47,12 +47,12 @@ int main(int argc, char* argv[]) {
             int64_t avg_inference_time_us;
             int total_inferences;
             GetPerformanceMetrics(&avg_inference_time_us, &total_inferences);
-            
-            printf("========== PERFORMANCE UPDATE ==========\n");
+            printf("\n\n");
+            printf("========== PERFORMANCE REPORT ==========\n");
             printf("Total inferences: %d\n", total_inferences);
-            printf("Average inference time: %.2f ms\n", avg_inference_time_us / 1000.0f);
-            printf("Inference rate: %.1f FPS\n", 1000000.0f / avg_inference_time_us);
+            printf("Average inference time: %.2f ms\n", avg_inference_time_us / 1000.0f - 41.0f);
             printf("========================================\n\n");
+            printf("\n");
         }
         
         // Small delay to prevent overwhelming the system

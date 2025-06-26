@@ -33,7 +33,7 @@ void RespondToDetection(int detected_class, int8_t score) {
   float confidence = ConvertToPercentage(score);
 
   // Only report detections above a certain confidence threshold
-  if (confidence >95.0f) {
+  if (confidence >90.0f) {
     MicroPrintf("DETECTED: %s (%.1f%% confidence)", sign_type, confidence);
     
     // Visual feedback - blink LED for high-confidence detections

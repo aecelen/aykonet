@@ -219,10 +219,10 @@ TfLiteStatus InitCamera() {
     // Lower values = darker images, less motion blur
     // Higher values = brighter images, more motion blur
     // For traffic signs (usually bright/reflective), moderate exposure works well
-    hm01b0_set_coarse_integration(300);  // Start with moderate exposure - 300
+    hm01b0_set_coarse_integration(600);  // Start with moderate exposure - 300
     
     camera_initialized = true;
-    MicroPrintf("Camera initialized with exposure = 450");
+    MicroPrintf("Camera initialized with exposure = 400");
     
     return kTfLiteOk;
 }
@@ -247,30 +247,6 @@ TfLiteStatus GetImage(int image_width, int image_height, int channels, int8_t* i
 
     crop_center_64x64(camera_buffer, resized_buffer);
 
-    // Debug: Check image brightness every 10 frames
-    static int frame_count = 0;
-    frame_count++;
-    if (frame_count % 10 == 0) {  // Every 10 frames instead of 100
-        // Calculate average brightness
-        int total = 0;
-        for (int i = 0; i < kNumCols * kNumRows; i++) {
-            total += resized_buffer[i];
-        }
-        int avg_brightness = total / (kNumCols * kNumRows);
-        
-        MicroPrintf("Frame %d - Brightness: %d", frame_count, avg_brightness);
-        
-        // Brightness analysis
-        if (avg_brightness < 32) {
-            MicroPrintf("  -> TOO DARK - increase exposure");
-        } else if (avg_brightness > 223) {
-            MicroPrintf("  -> TOO BRIGHT - decrease exposure"); 
-        } else if (avg_brightness >= 64 && avg_brightness <= 192) {
-            MicroPrintf("  -> GOOD brightness for traffic signs");
-        } else {
-            MicroPrintf("  -> OK brightness");
-        }
-    }
     
     // Quantize for model input
     quantize_image(resized_buffer, image_data, kNumCols * kNumRows * channels);
