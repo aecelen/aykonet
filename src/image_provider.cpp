@@ -4,6 +4,7 @@
 #include "pico/stdlib.h"
 #include "pico-tflmicro/src/tensorflow/lite/micro/micro_log.h"
 #include <cmath>  // For roundf function
+#include <cstring> // For memcpy function
 
 // Camera configuration - Choose based on your hardware setup
 static const struct hm01b0_config camera_config = {
@@ -122,38 +123,53 @@ static bool camera_initialized = false;
 // }
 
 // Area averaging resize optimized for 160x120 -> 64x64
-void resize_image(const uint8_t* src, int src_width, int src_height, 
-                    uint8_t* dst, int dst_width, int dst_height) {
-    // For 160x120 -> 64x64: each output pixel averages a 2.5x1.875 block
-    // This gives better quality than simple decimation for 64x64
+// void resize_image(const uint8_t* src, int src_width, int src_height, 
+//                     uint8_t* dst, int dst_width, int dst_height) {
+//     // For 160x120 -> 64x64: each output pixel averages a 2.5x1.875 block
+//     // This gives better quality than simple decimation for 64x64
 
-    float x_ratio = (float)src_width / dst_width;   // 160/64 = 2.5
-    float y_ratio = (float)src_height / dst_height; // 120/64 = 1.875
+//     float x_ratio = (float)src_width / dst_width;   // 160/64 = 2.5
+//     float y_ratio = (float)src_height / dst_height; // 120/64 = 1.875
 
-    for (int y = 0; y < dst_height; y++) {
-        for (int x = 0; x < dst_width; x++) {
-            // Calculate source block boundaries
-            int x_start = (int)(x * x_ratio);
-            int x_end = (int)((x + 1) * x_ratio);
-            int y_start = (int)(y * y_ratio);
-            int y_end = (int)((y + 1) * y_ratio);
+//     for (int y = 0; y < dst_height; y++) {
+//         for (int x = 0; x < dst_width; x++) {
+//             // Calculate source block boundaries
+//             int x_start = (int)(x * x_ratio);
+//             int x_end = (int)((x + 1) * x_ratio);
+//             int y_start = (int)(y * y_ratio);
+//             int y_end = (int)((y + 1) * y_ratio);
 
-            // Clamp to image boundaries
-            if (x_end > src_width) x_end = src_width;
-            if (y_end > src_height) y_end = src_height;
+//             // Clamp to image boundaries
+//             if (x_end > src_width) x_end = src_width;
+//             if (y_end > src_height) y_end = src_height;
 
-            // Average all pixels in the block
-            int sum = 0;
-            int count = 0;
-            for (int sy = y_start; sy < y_end; sy++) {
-                for (int sx = x_start; sx < x_end; sx++) {
-                    sum += src[sy * src_width + sx];
-                    count++;
-                }
-            }
+//             // Average all pixels in the block
+//             int sum = 0;
+//             int count = 0;
+//             for (int sy = y_start; sy < y_end; sy++) {
+//                 for (int sx = x_start; sx < x_end; sx++) {
+//                     sum += src[sy * src_width + sx];
+//                     count++;
+//                 }
+//             }
 
-            dst[y * dst_width + x] = (count > 0) ? (sum / count) : 0;
-        }
+//             dst[y * dst_width + x] = (count > 0) ? (sum / count) : 0;
+//         }
+//     }
+// }
+
+// CENTER CROP 64x64 from 160x120 (NO DISTORTION!)
+void crop_center_64x64(const uint8_t* src, uint8_t* dst) {
+    const int SRC_WIDTH = 160;
+    const int X_OFFSET = 48;  // (160-64)/2  
+    const int Y_OFFSET = 28;  // (120-64)/2
+    
+    // Start of center region in source image
+    const uint8_t* src_start = src + (Y_OFFSET * SRC_WIDTH) + X_OFFSET;
+    
+    // Copy 64 pixels per row, 64 rows total
+    for (int y = 0; y < 64; y++) {
+        memcpy(dst + (y * 64), src_start + (y * SRC_WIDTH), 64);
     }
 }
 
@@ -203,10 +219,10 @@ TfLiteStatus InitCamera() {
     // Lower values = darker images, less motion blur
     // Higher values = brighter images, more motion blur
     // For traffic signs (usually bright/reflective), moderate exposure works well
-    hm01b0_set_coarse_integration(450);  // Start with moderate exposure - 300
+    hm01b0_set_coarse_integration(300);  // Start with moderate exposure - 300
     
     camera_initialized = true;
-    MicroPrintf("Camera initialized with exposure = 100");
+    MicroPrintf("Camera initialized with exposure = 450");
     
     return kTfLiteOk;
 }
@@ -226,8 +242,35 @@ TfLiteStatus GetImage(int image_width, int image_height, int channels, int8_t* i
     uint8_t resized_buffer[kNumCols * kNumRows];
     
     // Resize from 160x120 to 32x32
-    resize_image(camera_buffer, 160, 120, 
-                 resized_buffer, kNumCols, kNumRows);
+    // resize_image(camera_buffer, 160, 120, 
+    //              resized_buffer, kNumCols, kNumRows);
+
+    crop_center_64x64(camera_buffer, resized_buffer);
+
+    // Debug: Check image brightness every 10 frames
+    static int frame_count = 0;
+    frame_count++;
+    if (frame_count % 10 == 0) {  // Every 10 frames instead of 100
+        // Calculate average brightness
+        int total = 0;
+        for (int i = 0; i < kNumCols * kNumRows; i++) {
+            total += resized_buffer[i];
+        }
+        int avg_brightness = total / (kNumCols * kNumRows);
+        
+        MicroPrintf("Frame %d - Brightness: %d", frame_count, avg_brightness);
+        
+        // Brightness analysis
+        if (avg_brightness < 32) {
+            MicroPrintf("  -> TOO DARK - increase exposure");
+        } else if (avg_brightness > 223) {
+            MicroPrintf("  -> TOO BRIGHT - decrease exposure"); 
+        } else if (avg_brightness >= 64 && avg_brightness <= 192) {
+            MicroPrintf("  -> GOOD brightness for traffic signs");
+        } else {
+            MicroPrintf("  -> OK brightness");
+        }
+    }
     
     // Quantize for model input
     quantize_image(resized_buffer, image_data, kNumCols * kNumRows * channels);
