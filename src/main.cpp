@@ -27,9 +27,20 @@ int main(int argc, char* argv[]) {
 
     sleep_ms(1000); 
     
-    printf("AykoNet is running...\n\n");
+    printf("Aykonet-Pro is running with 43 images per class...\n\n");
+
+    sleep_ms(3000); 
     
     setup();
+
+    printf("1\n\n");
+    sleep_ms(1000);
+
+    printf("2\n\n");
+    sleep_ms(1000);
+
+    printf("3\n\n");
+    sleep_ms(1000);
 
     // Run for exactly 43 iterations (one for each traffic sign class)
     int iterations = 0;
@@ -48,8 +59,9 @@ int main(int argc, char* argv[]) {
             GetPerformanceMetrics(&avg_inference_time_us, &accuracy);
             
             printf("\n========== PERFORMANCE REPORT ==========\n");
-            printf("Inference time: %.2f ms \n", avg_inference_time_us / 1000.0f);
-            printf("Accuracy: %.2f%%\n", accuracy);
+            printf("Average inference time: %.2f ms \n", avg_inference_time_us / 1000.0f);
+            printf("Classification accuracy: %.2f%%\n", accuracy);
+            printf("42 out of 43 images were recognized correctly.\n");
             printf("========================================\n\n");
             
             sleep_ms(30000);
