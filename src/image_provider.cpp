@@ -219,7 +219,7 @@ TfLiteStatus InitCamera() {
     // Lower values = darker images, less motion blur
     // Higher values = brighter images, more motion blur
     // For traffic signs (usually bright/reflective), moderate exposure works well
-    hm01b0_set_coarse_integration(600);  // Start with moderate exposure - 300
+    hm01b0_set_coarse_integration(350);  // Start with moderate exposure - 300
     
     camera_initialized = true;
     MicroPrintf("Camera initialized with exposure = 400");
