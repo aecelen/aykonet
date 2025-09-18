@@ -32,6 +32,11 @@ void RespondToDetection(int detected_class, int8_t score) {
   // Convert score to percentage
   float confidence = ConvertToPercentage(score);
 
+  gpio_put(LED_PIN, 1);
+  sleep_ms(10);
+  gpio_put(LED_PIN, 0);
+  
+
   // Log the detection
     // MicroPrintf("%.1f%% confidence\n", confidence);
   

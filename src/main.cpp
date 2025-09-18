@@ -27,20 +27,29 @@ int main(int argc, char* argv[]) {
 
     sleep_ms(1000); 
     
-    printf("Aykonet-Pro is running with 43 images per class...\n\n");
+    printf("AykoNet-Pro is running on the RP2040 MCU, classifying test images on-device.\n\n\n");
 
     sleep_ms(3000); 
     
     setup();
 
+    gpio_put(LED_PIN, 1);
     printf("1\n\n");
-    sleep_ms(1000);
+    sleep_ms(500);
+    gpio_put(LED_PIN, 0);
+    sleep_ms(500);
 
+    gpio_put(LED_PIN, 1);
     printf("2\n\n");
-    sleep_ms(1000);
+    sleep_ms(500);
+    gpio_put(LED_PIN, 0);
+    sleep_ms(500);
 
-    printf("3\n\n");
-    sleep_ms(1000);
+    gpio_put(LED_PIN, 1);
+    printf("3\n\n\n");
+    sleep_ms(500);
+    gpio_put(LED_PIN, 0);
+    sleep_ms(500);
 
     // Run for exactly 43 iterations (one for each traffic sign class)
     int iterations = 0;
@@ -58,14 +67,36 @@ int main(int argc, char* argv[]) {
             float accuracy;
             GetPerformanceMetrics(&avg_inference_time_us, &accuracy);
             
-            printf("\n========== PERFORMANCE REPORT ==========\n");
+            printf("\n\n========== PERFORMANCE REPORT ==========\n");
             printf("Average inference time: %.2f ms \n", avg_inference_time_us / 1000.0f);
             printf("Classification accuracy: %.2f%%\n", accuracy);
-            printf("42 out of 43 images were recognized correctly.\n");
-            printf("========================================\n\n");
+            printf("42 out of 43 images were classified correctly.\n");
+            printf("========================================\n\n\n\n\n\n\n");
             
-            sleep_ms(30000);
+            sleep_ms(15000);
             iterations = 0;
+
+            printf("\n\n\n\nAykoNet-Pro is running on the RP2040 MCU, classifying test images on-device.\n\n\n");
+
+            sleep_ms(3000); 
+            
+            gpio_put(LED_PIN, 1);
+            printf("1\n\n");
+            sleep_ms(500);
+            gpio_put(LED_PIN, 0);
+            sleep_ms(500);
+        
+            gpio_put(LED_PIN, 1);
+            printf("2\n\n");
+            sleep_ms(500);
+            gpio_put(LED_PIN, 0);
+            sleep_ms(500);
+        
+            gpio_put(LED_PIN, 1);
+            printf("3\n\n\n");
+            sleep_ms(500);
+            gpio_put(LED_PIN, 0);
+            sleep_ms(500);
         }
     }
     
