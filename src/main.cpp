@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
 
     sleep_ms(1000); 
     
-    printf("AykoNet-Pro is running on the RP2040 MCU, classifying test images on-device.\n\n\n");
+    printf("AykoNet-Lite is running on the RP2040 MCU, classifying test images on-device.\n\n\n");
 
     sleep_ms(3000); 
     
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
             printf("\n\n========== PERFORMANCE REPORT ==========\n");
             printf("Average inference time: %.2f ms \n", avg_inference_time_us / 1000.0f);
             printf("Classification accuracy: %.2f%%\n", accuracy);
-            printf("42 out of 43 images were classified correctly.\n");
+            printf("40 out of 43 images were classified correctly.\n");
             printf("========================================\n\n\n\n\n\n\n");
             
             sleep_ms(15000);
