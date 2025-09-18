@@ -88,7 +88,7 @@ TfLiteStatus InitCamera() {
         return kTfLiteOk;
     }
     
-    MicroPrintf("Initializing camera...");
+    MicroPrintf("Initializing camera...\n");
     
     if (hm01b0_init(&camera_config) != 0) {
         MicroPrintf("Failed to initialize camera!");
@@ -98,7 +98,7 @@ TfLiteStatus InitCamera() {
     hm01b0_set_coarse_integration(400);
     
     camera_initialized = true;
-    MicroPrintf("Camera initialized with exposure = 400");
+    // MicroPrintf("Camera initialized with exposure = 400");
     
     return kTfLiteOk;
 }

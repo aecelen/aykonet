@@ -26,13 +26,12 @@ int main(int argc, char* argv[]) {
 
     sleep_ms(1000); 
     
-    printf("AykoNet Traffic Sign Recognition with Camera\n");
-    printf("Initializing...\n\n");
+    printf("AykoNet-Pro is running on the RP2040 MCU with HM01B0 camera.\n");
+    printf("Real-time traffic sign recognition.\n\n");
+
+    sleep_ms(2000); 
     
     setup();
-    
-    printf("Starting continuous inference...\n");
-    printf("Press Ctrl+C to view performance metrics\n\n");
     
     int inference_count = 0;
     const int REPORT_INTERVAL = 20; // Report every 10 inferences

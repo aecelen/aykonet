@@ -28,7 +28,7 @@ alignas(16) static uint8_t tensor_arena[kTensorArenaSize];
 
 // The name of this function is important for Arduino compatibility.
 void setup() {
-  MicroPrintf("Setting up TensorFlow Lite Micro...");
+  // MicroPrintf("Setting up TensorFlow Lite Micro...");
   
   // Map the model into a usable data structure
   model = tflite::GetModel(g_traffic_sign_model_data);
@@ -66,8 +66,8 @@ void setup() {
   // Get information about the model's input
   input = interpreter->input(0);
   
-  MicroPrintf("Input tensor dimensions: %d x %d x %d", 
-              input->dims->data[1], input->dims->data[2], input->dims->data[3]);
+  // MicroPrintf("Input tensor dimensions: %d x %d x %d", 
+  //             input->dims->data[1], input->dims->data[2], input->dims->data[3]);
   
   // Initialize camera
   if (InitCamera() != kTfLiteOk) {
@@ -79,7 +79,7 @@ void setup() {
   total_inference_time = 0;
   total_inferences = 0;
   
-  MicroPrintf("Setup completed successfully");
+  // MicroPrintf("Setup completed successfully");
 }
 
 // The name of this function is important for Arduino compatibility.
