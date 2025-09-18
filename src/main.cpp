@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
             printf("\n\n");
             printf("========== PERFORMANCE REPORT ==========\n");
             printf("Total inferences: %d\n", total_inferences);
-            printf("Average inference time: %.2f ms\n", avg_inference_time_us / 1000.0f - 41.0f);
+            printf("Average inference time: %.2f ms\n", avg_inference_time_us / 1000.0f);
             printf("========================================\n\n");
             printf("\n");
         }
